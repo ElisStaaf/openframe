@@ -1,23 +1,3 @@
-# OpenFrame
-OpenFrame is the LEAST functioning web framework EVER. As I have
-decicated all my projects to writing as little JavaScript as possible,
-this is written in the only good programming language; C.
-
-## Why?
-It is ofcourse incredibly stupid and foolish of anyone to believe that C
-is good for everyday web use, but it's fun to program frameworks I guess.
-
-## Install
-```sh
-git clone https://github.com/ElisStaaf/openframe
-cd openframe
-
-make          # Make the thing
-./install.sh  # Install to /usr/include
-```
-
-## Examples
-```c
 #include <server.h>
 #include <routing.h>
 #include <openframe.h>
@@ -25,8 +5,8 @@ make          # Make the thing
 http_response *handle_index()
 {
     hashmap_map *context = hashmap_new();
-    hashmap_put(context, "title", "Hello, World!");
-    hashmap_put(context, "name", "John Doe");
+    hashmap_put(context, "title", openframe_env("APPNAME", "FrameC"));
+    hashmap_put(context, "name", "Noah Scholz");
     http_response *r = http_response_view(200, "index", context);
     hashmap_free(context);
     return r;
@@ -63,6 +43,21 @@ http_response *handle_multiple() {
     return res;
 }
 
+http_response *handle_session() {
+    // Retrieve the current value from the session or "0" if not set
+    char *valueStr = openframe_session_get("value", "0");
+    int value = atoi(valueStr);
+    
+    // Increment the value
+    value++;
+    char newValueStr[12]; // Enough to hold int values, including negative numbers
+    sprintf(newValueStr, "%d", value);
+    
+    // Update the session with the new value
+    openframe_session_set("value", newValueStr);
+    return http_response_text(200, newValueStr);
+}
+
 int main()
 {
     router_t *router = router_create();
@@ -71,13 +66,9 @@ int main()
     router_post(router, "/hello", &handle_hello_post);
     router_get(router, "/hello/{id}", &handle_hello_id);
     router_get(router, "/multiple/{id}/{name}", &handle_multiple);
+    router_get(router, "/session", &handle_session);
 
     init_server(80, router);
     start_server();
     return 0;
 }
-```
-
-## Credits
-OpenFrame is based on FrameC by the 1400th copy of Noah (noah1400),
-see [this](https://github.com/noah1400/FrameC).
